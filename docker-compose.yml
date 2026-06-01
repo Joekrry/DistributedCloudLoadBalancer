@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # MySQL Database Container
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: cloudbalancer
+      MYSQL_USER: cbuser
+      MYSQL_PASSWORD: cbpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cb-network
+
+  # MQTT Broker
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - cb-network
+
+  # File Server Containers (4 instances)
+  file-server-1:
+    image: ubuntu:latest
+    container_name: file-server-1
+    command: >
+      bash -c "apt-get update && apt-get install -y openssh-server &&
+      mkdir /var/run/sshd &&
+      echo 'root:fileserver' | chpasswd &&
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+      /usr/sbin/sshd -D"
+    volumes:
+      - fs1-data:/data
+    networks:
+      - cb-network
+
+  file-server-2:
+    image: ubuntu:latest
+    container_name: file-server-2
+    command: >
+      bash -c "apt-get update && apt-get install -y openssh-server &&
+      mkdir /var/run/sshd &&
+      echo 'root:fileserver' | chpasswd &&
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+      /usr/sbin/sshd -D"
+    volumes:
+      - fs2-data:/data
+    networks:
+      - cb-network
+
+  file-server-3:
+    image: ubuntu:latest
+    container_name: file-server-3
+    command: >
+      bash -c "apt-get update && apt-get install -y openssh-server &&
+      mkdir /var/run/sshd &&
+      echo 'root:fileserver' | chpasswd &&
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+      /usr/sbin/sshd -D"
+    volumes:
+      - fs3-data:/data
+    networks:
+      - cb-network
+
+  file-server-4:
+    image: ubuntu:latest
+    container_name: file-server-4
+    command: >
+      bash -c "apt-get update && apt-get install -y openssh-server &&
+      mkdir /var/run/sshd &&
+      echo 'root:fileserver' | chpasswd &&
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+      /usr/sbin/sshd -D"
+    volumes:
+      - fs4-data:/data
+    networks:
+      - cb-network
+
+  # Jenkins CI/CD
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+    networks:
+      - cb-network
+
+  # Gitea (GitHub-like server)
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    volumes:
+      - gitea-data:/data
+    networks:
+      - cb-network
+
+volumes:
+  mysql-data:
+  fs1-data:
+  fs2-data:
+  fs3-data:
+  fs4-data:
+  jenkins-data:
+  gitea-data:
+
+networks:
+  cb-network:
+    driver: bridge
