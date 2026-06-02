@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # MySQL Database Container
   mysql-db:
     image: mysql:8.0
     container_name: mysql-db
@@ -18,7 +17,6 @@ services:
     networks:
       - cb-network
 
-  # MQTT Broker
   mqtt-broker:
     image: eclipse-mosquitto:2
     container_name: mqtt-broker
@@ -30,7 +28,6 @@ services:
     networks:
       - cb-network
 
-  # File Server Containers (4 instances)
   file-server-1:
     image: ubuntu:latest
     container_name: file-server-1
@@ -87,7 +84,6 @@ services:
     networks:
       - cb-network
 
-  # Jenkins CI/CD
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
@@ -98,7 +94,6 @@ services:
     networks:
       - cb-network
 
-  # Gitea (GitHub-like server)
   gitea:
     image: gitea/gitea:latest
     container_name: gitea

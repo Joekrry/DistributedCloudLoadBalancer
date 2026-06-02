@@ -6,13 +6,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-/**
- * JavaFX application entry point for CloudBalancer.
- *
- * <p>At this stage the application launches a placeholder window so the project is
- * runnable from the start ({@code mvn javafx:run}). The login screen and full
- * dashboard are wired in later commits.</p>
- */
 public class MainApp extends Application {
 
     @Override

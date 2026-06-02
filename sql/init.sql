@@ -1,7 +1,6 @@
 CREATE DATABASE IF NOT EXISTS cloudbalancer;
 USE cloudbalancer;
 
--- Users table
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -12,7 +11,6 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Files metadata
 CREATE TABLE files (
     id INT AUTO_INCREMENT PRIMARY KEY,
     filename VARCHAR(255) NOT NULL,
@@ -25,7 +23,6 @@ CREATE TABLE files (
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- File chunks metadata
 CREATE TABLE file_chunks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     file_id INT NOT NULL,
@@ -38,7 +35,6 @@ CREATE TABLE file_chunks (
     UNIQUE(file_id, chunk_index)
 );
 
--- Access control (sharing permissions)
 CREATE TABLE file_permissions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     file_id INT NOT NULL,
@@ -52,7 +48,6 @@ CREATE TABLE file_permissions (
     UNIQUE(file_id, user_id, permission)
 );
 
--- Event logs
 CREATE TABLE event_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -62,7 +57,6 @@ CREATE TABLE event_logs (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Insert default admin account (password: "admin")
--- The Java UserDAO re-seeds this with a real PBKDF2 hash/salt; this row is a placeholder.
+-- placeholder admin; UserDAO replaces the hash/salt with a real PBKDF2 value
 INSERT INTO users (username, password_hash, salt, role)
 VALUES ('admin', 'PLACEHOLDER_HASH', 'PLACEHOLDER_SALT', 'admin');
