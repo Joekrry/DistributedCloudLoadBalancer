@@ -1,16 +1,16 @@
 package com.cloudbalancer;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 public class MainApp extends Application {
 
     @Override
-    public void start(Stage primaryStage) {
-        StackPane root = new StackPane(new Label("CloudBalancer — under construction"));
+    public void start(Stage primaryStage) throws Exception {
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/Login.fxml"));
         primaryStage.setTitle("CloudBalancer");
         primaryStage.setScene(new Scene(root, 1000, 700));
         primaryStage.show();
