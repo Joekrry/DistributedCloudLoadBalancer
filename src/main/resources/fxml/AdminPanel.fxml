@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.cloudbalancer.controller.AdminController">
+
+    <center>
+        <TableView fx:id="userTable" BorderPane.alignment="CENTER">
+            <columns>
+                <TableColumn fx:id="colId"        text="ID"       prefWidth="50"/>
+                <TableColumn fx:id="colUsername"   text="Username" prefWidth="180"/>
+                <TableColumn fx:id="colRole"       text="Role"     prefWidth="100"/>
+                <TableColumn fx:id="colCreatedAt"  text="Created"  prefWidth="160"/>
+            </columns>
+            <placeholder><Label text="No users found."/></placeholder>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox spacing="8" alignment="CENTER_RIGHT">
+            <padding><Insets top="8" bottom="8" left="8" right="8"/></padding>
+            <Label fx:id="statusLabel" HBox.hgrow="ALWAYS" style="-fx-text-fill: grey;"/>
+            <Button text="Promote to Admin"   onAction="#handlePromote"/>
+            <Button text="Demote to Standard" onAction="#handleDemote"/>
+            <Button text="Delete User"        onAction="#handleDelete"
+                    style="-fx-text-fill: red;"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
