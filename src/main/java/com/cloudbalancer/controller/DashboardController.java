@@ -1,25 +1,34 @@
 package com.cloudbalancer.controller;
 
+import com.cloudbalancer.dao.FileDAO;
+import com.cloudbalancer.dao.UserDAO;
+import com.cloudbalancer.model.FileMetadata;
+import com.cloudbalancer.model.User;
 import com.cloudbalancer.service.ServiceLocator;
 import com.cloudbalancer.service.SessionManager;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
 import javafx.stage.Modality;
+import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DashboardController {
 
     @FXML private Label welcomeLabel;
     @FXML private Menu adminMenu;
 
-    @FXML private TableView fileTable;
-    @FXML private TableColumn colFilename;
-    @FXML private TableColumn colSize;
-    @FXML private TableColumn colChunks;
-    @FXML private TableColumn colDate;
+    @FXML private TableView<FileMetadata> fileTable;
+    @FXML private TableColumn<FileMetadata, String> colFilename;
+    @FXML private TableColumn<FileMetadata, String> colSize;
+    @FXML private TableColumn<FileMetadata, String> colChunks;
+    @FXML private TableColumn<FileMetadata, String> colDate;
 
     @FXML private TextArea logArea;
 
@@ -27,14 +36,36 @@ public class DashboardController {
     @FXML private TextArea terminalOutput;
     @FXML private TextField terminalInput;
 
+    private FileDAO fileDAO;
+    private UserDAO userDAO;
+
     @FXML
     public void initialize() {
-        var user = SessionManager.getCurrentUser();
+        fileDAO = ServiceLocator.getFileDAO();
+        userDAO = ServiceLocator.getUserDAO();
+
+        User user = SessionManager.getCurrentUser();
         welcomeLabel.setText("Logged in as: " + user.getUsername() + "  |  Role: " + user.getRole());
         adminMenu.setVisible(user.isAdmin());
+
+        colFilename.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getFilename()));
+        colSize.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getFileSize())));
+        colChunks.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getTotalChunks())));
+        colDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCreatedAt()));
+
         terminalTarget.getItems().add("Local");
         terminalTarget.setValue("Local");
+
+        refreshFileTable();
         appendLog("Session started for " + user.getUsername());
+    }
+
+    public void refreshFileTable() {
+        User user = SessionManager.getCurrentUser();
+        List<FileMetadata> files = new ArrayList<>();
+        files.addAll(fileDAO.getFilesByOwner(user.getId()));
+        files.addAll(fileDAO.getSharedFiles(user.getId()));
+        fileTable.setItems(FXCollections.observableArrayList(files));
     }
 
     @FXML
@@ -49,12 +80,39 @@ public class DashboardController {
 
     @FXML
     private void handleShare() {
-        appendLog("Share — not yet implemented.");
+        FileMetadata selected = fileTable.getSelectionModel().getSelectedItem();
+        if (selected == null) { appendLog("Select a file to share."); return; }
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Share File");
+        dialog.setHeaderText("Share \"" + selected.getFilename() + "\"");
+        dialog.setContentText("Username to share with:");
+        dialog.showAndWait().ifPresent(username -> {
+            User target = userDAO.findByUsername(username);
+            if (target == null) {
+                appendLog("Share failed — user not found: " + username);
+            } else {
+                fileDAO.shareFile(selected.getId(), target.getId(), "read",
+                        SessionManager.getCurrentUser().getId());
+                appendLog("Shared \"" + selected.getFilename() + "\" with " + username);
+            }
+        });
     }
 
     @FXML
     private void handleDelete() {
-        appendLog("Delete — not yet implemented.");
+        FileMetadata selected = fileTable.getSelectionModel().getSelectedItem();
+        if (selected == null) { appendLog("Select a file to delete."); return; }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+            "Delete \"" + selected.getFilename() + "\"?", ButtonType.OK, ButtonType.CANCEL);
+        confirm.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                fileDAO.deleteFile(selected.getId());
+                appendLog("Deleted \"" + selected.getFilename() + "\"");
+                refreshFileTable();
+            }
+        });
     }
 
     @FXML
