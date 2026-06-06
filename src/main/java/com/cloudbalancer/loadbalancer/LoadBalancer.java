@@ -1,5 +1,6 @@
 package com.cloudbalancer.loadbalancer;
 
+import com.cloudbalancer.mqtt.MQTTClient;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -107,6 +108,23 @@ public class LoadBalancer {
             if (s.availablePermits() == 0) busy++;
         }
         return busy;
+    }
+
+    public void evaluateAndScale(MQTTClient mqttClient) {
+        double utilisation = (double) getBusyCount() / activeContainers.size();
+        try {
+            if (utilisation > 0.75 && activeContainers.size() < 8) {
+                String newContainer = "file-server-" + (activeContainers.size() + 1);
+                mqttClient.publish("cloudbalancer/scale", "START:" + newContainer);
+                addContainer(newContainer);
+            } else if (utilisation < 0.25 && activeContainers.size() > 2) {
+                String last = activeContainers.get(activeContainers.size() - 1);
+                mqttClient.publish("cloudbalancer/scale", "STOP:" + last);
+                removeContainer(last);
+            }
+        } catch (Exception e) {
+            System.err.println("Scaling failed: " + e.getMessage());
+        }
     }
 
     public void setAlgorithm(Algorithm algorithm) { this.currentAlgorithm = algorithm; }
