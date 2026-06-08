@@ -6,6 +6,8 @@ import com.cloudbalancer.model.FileMetadata;
 import com.cloudbalancer.model.User;
 import com.cloudbalancer.service.ServiceLocator;
 import com.cloudbalancer.service.SessionManager;
+import com.cloudbalancer.ssh.SSHFileTransfer;
+import com.cloudbalancer.terminal.LocalTerminal;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -53,7 +55,8 @@ public class DashboardController {
         colChunks.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getTotalChunks())));
         colDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCreatedAt()));
 
-        terminalTarget.getItems().add("Local");
+        terminalTarget.getItems().addAll(
+            "Local", "file-server-1", "file-server-2", "file-server-3", "file-server-4");
         terminalTarget.setValue("Local");
 
         refreshFileTable();
@@ -131,7 +134,25 @@ public class DashboardController {
 
     @FXML
     private void handleTerminalCommand() {
-        appendLog("Terminal — not yet implemented.");
+        String command = terminalInput.getText().trim();
+        if (command.isEmpty()) return;
+
+        terminalOutput.appendText("$ " + command + "\n");
+        String target = terminalTarget.getValue();
+        String result;
+
+        if ("Local".equals(target)) {
+            result = LocalTerminal.executeCommand(command);
+        } else {
+            try {
+                result = SSHFileTransfer.executeCommand(target, command);
+            } catch (Exception e) {
+                result = "SSH error: " + e.getMessage();
+            }
+        }
+
+        terminalOutput.appendText(result + "\n");
+        terminalInput.clear();
     }
 
     @FXML
