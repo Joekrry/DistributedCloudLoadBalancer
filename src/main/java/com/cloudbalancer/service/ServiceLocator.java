@@ -10,9 +10,11 @@ public class ServiceLocator {
     private static final RemoteDatabase remoteDb = new RemoteDatabase();
     private static final UserDAO userDAO = new UserDAO(localDb, remoteDb);
     private static final FileDAO fileDAO = new FileDAO(localDb, remoteDb);
+    private static final EventLogger eventLogger = new EventLogger(localDb, remoteDb);
 
     public static LocalDatabase getLocalDb() { return localDb; }
     public static RemoteDatabase getRemoteDb() { return remoteDb; }
     public static UserDAO getUserDAO() { return userDAO; }
     public static FileDAO getFileDAO() { return fileDAO; }
+    public static EventLogger getEventLogger() { return eventLogger; }
 }

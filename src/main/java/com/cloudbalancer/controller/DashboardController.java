@@ -4,6 +4,7 @@ import com.cloudbalancer.dao.FileDAO;
 import com.cloudbalancer.dao.UserDAO;
 import com.cloudbalancer.model.FileMetadata;
 import com.cloudbalancer.model.User;
+import com.cloudbalancer.service.EventLogger;
 import com.cloudbalancer.service.ServiceLocator;
 import com.cloudbalancer.service.SessionManager;
 import com.cloudbalancer.ssh.SSHFileTransfer;
@@ -40,11 +41,14 @@ public class DashboardController {
 
     private FileDAO fileDAO;
     private UserDAO userDAO;
+    private EventLogger eventLogger;
 
     @FXML
     public void initialize() {
         fileDAO = ServiceLocator.getFileDAO();
         userDAO = ServiceLocator.getUserDAO();
+        eventLogger = ServiceLocator.getEventLogger();
+        eventLogger.setLogPane(logArea);
 
         User user = SessionManager.getCurrentUser();
         welcomeLabel.setText("Logged in as: " + user.getUsername() + "  |  Role: " + user.getRole());
@@ -60,7 +64,7 @@ public class DashboardController {
         terminalTarget.setValue("Local");
 
         refreshFileTable();
-        appendLog("Session started for " + user.getUsername());
+        eventLogger.log(user.getId(), "LOGIN", "Session started");
     }
 
     public void refreshFileTable() {
@@ -112,7 +116,8 @@ public class DashboardController {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 fileDAO.deleteFile(selected.getId());
-                appendLog("Deleted \"" + selected.getFilename() + "\"");
+                eventLogger.log(SessionManager.getCurrentUser().getId(),
+                    "DELETE", selected.getFilename());
                 refreshFileTable();
             }
         });
