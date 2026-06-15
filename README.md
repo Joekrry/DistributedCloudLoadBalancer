@@ -1,6 +1,6 @@
 # CloudBalancer
 
-Distributed cloud load balancer with encrypted file storage (SOFT40051 coursework).
+Distributed cloud load balancer with encrypted file storage
 
 A JavaFX desktop application backed by a dual SQLite/MySQL database setup, MQTT-driven
 container scaling, and AES-encrypted, chunked file storage distributed across a pool of
